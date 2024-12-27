@@ -1,0 +1,27 @@
+docker run 컨테이너ID
+: 컨테이너 생성 및 시작
+
+docker run -it 컨테이너ID
+: 컨테이너 생성 및 시작 및 접속
+
+docker run -it --rm 컨테이너ID
+: 상동, 컨테이너 종료시 자동으로 파일시스템 변경사항 삭제
+
+docker commit {Activated Container Name} {Version}
+
+ex) CPU only and Compact mode
+docker run -it --rm --name scheduler creadto/gachicam
+
+ex) 포트포워딩 + 그래픽 사용
+docker run -it --rm --gpus all --name creadtoAI -p 50051:80 creadto/gachicam
+
+ex) 공유 볼륨 Spider를 /workspace에 설정하고 상동
+docker run -it --rm --gpus all -v Spider:/workspace --name Manager -p 50051:80 -p 50054:83 creadto/gachicam:latest
+docker run -it --rm --gpus all -v Testbed:/workspace --name Test pytorch/pytorch:2.1.0-cuda12.1-cudnn8-devel
+docker run -it --rm --gpus all -v Testbed:/workspace --name Test creadto/testbed:Hair
+
+ex) shared memory 사용 (8GB)
+docker run -it --rm --gpus all --shm-size=8g -v Testbed:/workspace --name Temp creadto/testbed:Runtime
+
+ex) commit
+docker commit GachiCam creadto/gachicam:latest

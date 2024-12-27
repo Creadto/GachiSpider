@@ -1,0 +1,16 @@
+{
+    "{Regular Expression}":
+    {
+        "title":{
+            "method": "select",
+            "tag": "h1",
+            "attrs": null
+        },
+        "html":
+        {
+            "method": "select",
+            "tag": "div",
+            "html": true
+        }
+    }
+}

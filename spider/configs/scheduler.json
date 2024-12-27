@@ -1,0 +1,22 @@
+{
+    "Freshness":{
+        "platform": "MongoDB"
+    },
+    "Engine":{
+        "period": 0.3,
+        "result_length": 5000
+    },
+    "LifeCycle":{
+        "timeout": 300,
+        "ip_check": true
+    },
+    "Queue":{
+        "args":{
+        },
+        "endpoint": null
+    },
+    "DocDB":{
+        "args":{
+        }
+    }
+}

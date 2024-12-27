@@ -1,0 +1,8 @@
+{
+    "https://example.com":{
+        "any": "field, such as",
+        "kind": "bulletin",
+        "subtitle": "ECONOMY",
+        "period": 3
+    }
+}

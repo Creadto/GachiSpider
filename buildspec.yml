@@ -1,0 +1,73 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.11
+    commands:
+      - echo "Update pip"
+      - pip install --upgrade pip
+  pre_build:
+    commands:
+      - echo "Install latest version"
+      - pip install -r requirements.txt --target ./aws/lambda/Lib --upgrade
+      - pip install . --target ./aws/lambda/Lib --upgrade
+      - cp -r ./spider/form ./aws/lambda/Lib/spider
+      - cp -r ./spider/configs ./aws/lambda/Lib/spider
+      - rm -rf ./build
+      - rm -rf ./spider.egg-info
+      - if [ -d "./aws/lambda/Lib/" ]; then rm -rf ./aws/lambda/Lib/*.dist-info; fi
+      - if [ -d "./aws/lambda/Lib/" ]; then rm -rf ./aws/lambda/Lib/_*; fi
+  build:
+    commands:
+      - echo "Uploading lambda files to S3"
+      - cp -r ./aws/lambda/Lib/* ./aws/lambda/crawlParser/
+      - cp -r ./aws/lambda/Lib/* ./aws/lambda/crawlManager/
+      - cp -r ./aws/lambda/Lib/* ./aws/lambda/crawlTransformer/
+      - cp -r ./aws/lambda/Lib/* ./aws/lambda/crawlQuery/
+      
+      - echo "Uploading pending process from SQS"
+      - cd ./aws/lambda/crawlInitializer
+      - zip -r ../crawlInitializer.zip ./*
+      - aws s3 cp ../crawlInitializer.zip s3://creadto/lambda/crawlInitializer.zip
+      - cd ../../../
+
+      - echo "Uploading crawlParser"
+      - cd ./aws/lambda/crawlParser
+      - zip -r ../crawlParser.zip ./*
+      - aws s3 cp ../crawlParser.zip s3://creadto/lambda/crawlParser.zip
+      - cd ../../../
+
+      - echo "Uploading crawlManager"
+      - cd ./aws/lambda/crawlManager
+      - zip -r ../crawlManager.zip ./*
+      - aws s3 cp ../crawlManager.zip s3://creadto/lambda/crawlManager.zip
+      - cd ../../../
+
+      - echo "Uploading crawlTransformer"
+      - cd ./aws/lambda/crawlTransformer
+      - zip -r ../crawlTransformer.zip ./*
+      - aws s3 cp ../crawlTransformer.zip s3://creadto/lambda/crawlTransformer.zip
+      - cd ../../../
+
+      - echo "Uploading crawlQuery"
+      - cd ./aws/lambda/crawlQuery
+      - zip -r ../crawlQuery.zip ./*
+      - aws s3 cp ../crawlQuery.zip s3://creadto/lambda/crawlQuery.zip
+      - cd ../../../
+
+      - echo "Uploading replaceNATGateway"
+      - cd ./aws/lambda/replaceNATGateway
+      - zip -r ../replaceNATGateway.zip ./*
+      - aws s3 cp ../replaceNATGateway.zip s3://creadto/lambda/replaceNATGateway.zip
+      - cd ../../../
+
+      - echo "Uploading deleteNATGateway"
+      - cd ./aws/lambda/deleteNATGateway
+      - zip -r ../deleteNATGateway.zip ./*
+      - aws s3 cp ../deleteNATGateway.zip s3://creadto/lambda/deleteNATGateway.zip
+      - cd ../../../
+      
+  post_build:
+    commands:
+      - echo "Empty Post Build, Check Deploy Stage in Pipeline on AWS"
