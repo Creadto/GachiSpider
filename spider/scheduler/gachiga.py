@@ -43,6 +43,8 @@ class GachigaScheduler(Scheduler):
     def _check_pending_jobs(self, collection):
         jobs = collection.find({"status": "pending"}, {"url": 1, "retry": 2, "max_retry": 3})
         replace_flag = True
+        
+        result_logs = ""
         for job in jobs:
             job['retry'] += 1
             if job['retry'] >= job['max_retry']:
@@ -52,12 +54,14 @@ class GachigaScheduler(Scheduler):
             self._base_logger.info(f"Pending job({job['retry']}/{job['max_retry']}): {url}")
             self.add_request(url, replace_nat=replace_flag, **job)
             replace_flag = False
-        return len(jobs)
+            result_logs += f"{job['retry']}/{job['max_retry']} | url: {job['url']} \n"
+        return result_logs
     
     def _update_job_freshness(self, collection):
         jobs = collection.find({"status": "inactive"}, {"url": 1, "last_updated": 1})
         gap_hours_cnt = 0
         reserved_jobs = []
+        result_logs = ""
         for job in jobs:
             freshness, gap_hours = self._get_freshness(job['last_updated'], self._config['Roots'][job['url']]['period'])
             gap_hours_cnt += 1 if gap_hours < 3 else 0
@@ -65,12 +69,14 @@ class GachigaScheduler(Scheduler):
                 reserved_jobs.append(job)
             
             self._base_logger.info(f"Job freshness({freshness}): {job['url']}")
+            
+            result_logs += f"Freshness: {freshness} | url: {job['url']} \n"
         
         for reversed_job in reserved_jobs:
             del_nat_gateway = gap_hours_cnt == 1
             self.add_request(reversed_job['url'], del_nat=del_nat_gateway **job)
             
-        return len(jobs)
+        return result_logs
     # endregion
     
     def _get_freshness(self, last_visited, period):
