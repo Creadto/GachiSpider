@@ -2,7 +2,6 @@ import time
 import heapq
 import logging
 import threading
-from collections import deque
 from datetime import datetime
 from typing import Dict
 
@@ -14,8 +13,9 @@ class Engine:
         self.logger = logging.getLogger(name=name)
         self.active = False
         self.base_period = period
-        self.fixed_results = deque(maxlen=result_length)
-                
+        self.fixed_results = []
+        self.max_length = result_length
+        
         self._main_events = dict()
         self._single_events = []
         self._fixed_events = dict()
@@ -56,6 +56,8 @@ class Engine:
         
         if len(result) > 0:
             heapq.heappush(self.fixed_results, (datetime.now(), result))
+            if len(self.fixed_results) > self.max_length:
+                heapq.heappop(self.fixed_results)
         
         if time.time() - begin > self.base_period:
             self.base_period = time.time() - begin
@@ -87,7 +89,7 @@ class Engine:
     def add_fixed_event(self, event, name, period, **kwargs):
         if name in self._main_events or name in self._fixed_events:
             return None
-        self._fixed_events[name] = (event, kwargs, period, 0)
+        self._fixed_events[name] = (event, kwargs, period, period)
         return len(self._fixed_events)
     
     def del_event(self, name):
