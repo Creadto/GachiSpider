@@ -12,8 +12,7 @@ phases:
       - echo "Install latest version"
       - pip install -r requirements.txt --target ./aws/lambda/Lib --upgrade
       - pip install . --target ./aws/lambda/Lib --upgrade
-      - cp -r ./spider/form ./aws/lambda/Lib/spider
-      - cp -r ./spider/configs ./aws/lambda/Lib/spider
+      - aws s3 cp s3://creadto/lambda/spider/ ./aws/lambda/Lib/spider --recursive
       - rm -rf ./build
       - rm -rf ./spider.egg-info
       - if [ -d "./aws/lambda/Lib/" ]; then rm -rf ./aws/lambda/Lib/*.dist-info; fi
