@@ -37,6 +37,7 @@ class GachigaScheduler(Scheduler):
             root = {'url': key}
             root.update(value)
             self._update_items(root, collection)
+            self.add_request(key, status='inactive')
     # endregion
     
     # region: Cron jobs: check pending jobs, update job freshness(not recorded)

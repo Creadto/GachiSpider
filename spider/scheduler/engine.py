@@ -51,6 +51,7 @@ class Engine:
                 self._fixed_events[name] = (event, kwargs, period, cum_seconds)
                 continue
             else:
+                cum_seconds = 0
                 self._fixed_events[name] = (event, kwargs, period, period)
                 result["[PERIODIC]" + name] = event(**kwargs)
         
