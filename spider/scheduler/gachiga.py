@@ -1,3 +1,4 @@
+from datetime import timedelta
 import json
 import time
 
@@ -37,7 +38,7 @@ class GachigaScheduler(Scheduler):
             root = {'url': key}
             root.update(value)
             self._update_items(root, collection)
-            self.add_request(key, status='inactive')
+            self.add_request(key, status='inactive', last_updated=time.time() - timedelta(days=30))
     # endregion
     
     # region: Cron jobs: check pending jobs, update job freshness(not recorded)
