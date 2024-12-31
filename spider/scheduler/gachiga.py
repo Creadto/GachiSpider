@@ -38,7 +38,7 @@ class GachigaScheduler(Scheduler):
             root = {'url': key}
             root.update(value)
             self._update_items(root, collection)
-            self.add_request(key, status='inactive', last_updated=time.time() - timedelta(days=30))
+            self.add_request(key, status='inactive', last_updated=time.time() - (30 * 24 * 60 * 60))
     # endregion
     
     # region: Cron jobs: check pending jobs, update job freshness(not recorded)
@@ -54,7 +54,7 @@ class GachigaScheduler(Scheduler):
             
             url = job['url']
             self._base_logger.info(f"Pending job({job['retry']}/{job['max_retry']}): {url}")
-            self.add_request(url, replace_nat=replace_flag, **job)
+            self.add_request(replace_nat=replace_flag, **job)
             replace_flag = False
             result_logs += f"{job['retry']}/{job['max_retry']} | url: {job['url']} \n"
         return result_logs
@@ -76,7 +76,7 @@ class GachigaScheduler(Scheduler):
         
         for reversed_job in reserved_jobs:
             del_nat_gateway = gap_hours_cnt == 1
-            self.add_request(reversed_job['url'], del_nat=del_nat_gateway **job)
+            self.add_request(del_nat=del_nat_gateway, **reversed_job)
             
         return result_logs
     # endregion
