@@ -1,6 +1,7 @@
 from datetime import timedelta
 import json
 import time
+import uuid
 
 from pymongo import MongoClient
 
@@ -91,6 +92,8 @@ class GachigaScheduler(Scheduler):
         try:
             response = self._queue.send_message(
                 QueueUrl=queue_url,
+                MessageGroupId='single-group',
+                MessageDeduplicationId=uuid.uuid1().hex,
                 MessageBody=json.dumps(payload)
             )
         except Exception as e:
