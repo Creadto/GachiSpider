@@ -13,7 +13,7 @@ class GachiGaHandler(Handler):
         self._meta_data = {"author_id": 867, "view_count": 0, "created_date_time": self.created_time, "last_modified_date_time": self.created_time, "entity_status": "ACTIVE", "sub_category": "", "like_count": 0, "comment_count": 0}
 
     def run(self, node: Node):
-        root_url = node.fan_in[0]
+        root_url = node.fan_in
         meta_data = copy.deepcopy(self._meta_data)
         meta_data['content'] = node.cache
         meta_data['title'] = node.data['title'][-1]['text']
