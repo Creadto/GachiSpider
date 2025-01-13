@@ -8,7 +8,8 @@ class Post(Entity):
     content: str = ""
     thumbnail_photo_url: str = None
     category: str = ""
-    country_code: int = 0
+    country_code_bitmask: int = 0
+    country_code: str = ""
     view_count: int = 0
     entity_status: str = ""
     state_code: str = ""
