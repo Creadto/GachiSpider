@@ -21,7 +21,7 @@ class LambdaCrawler(Crawler):
             self.collection = client['Pages']
             self.collection = self.collection['Nodes']
             
-            self.alternatives = get_data_with(self.collection, label='Unwrapped')
+            self.alternatives = get_data_with(self.collection, label='Unwrapped', root=kwargs['root'])
         except Exception as e:
             self.logger.error("Failed DB connection")
             self.collection = None

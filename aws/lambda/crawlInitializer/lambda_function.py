@@ -18,11 +18,8 @@ def lambda_handler(event, context):
         url = body.get("url")
         db_ip = body.get("db_ip")
         db_port = body.get("db_port")
-        del_nat_gateway = body.get("del_nat_gateway")
-        replace_nat_gateway = body.get("replace_nat_gateway")
         
-        result.update({"statusCode": 200, "url": url, "db_ip": db_ip, "db_port": db_port,
-                       "del_nat_gateway": del_nat_gateway, "replace_nat_gateway": replace_nat_gateway})  
+        result.update({"statusCode": 200, "url": url, "db_ip": db_ip, "db_port": db_port})  
         return result
 
     except Exception as e:

@@ -10,8 +10,7 @@ from spider.utils.mongo import get_data_with, sync_database
 
 def lambda_handler(event, context):
     kw_map = {'statusCode': 'status', 'message': 'message',
-              'nodes': 'nodes', 'db_ip': 'db_ip', 'db_port': 'db_port',
-              'del_nat_gateway': 'del_nat_gateway'}
+              'root': 'root', 'db_ip': 'db_ip', 'db_port': 'db_port'}
     
     kwargs = dict()
     for event_key, key in kw_map.items():
@@ -24,23 +23,37 @@ def lambda_handler(event, context):
         "password": os.getenv("password"),
         "database": os.getenv("database"),
     }
+    database = None
     try:
         client = MongoClient(host=kwargs['db_ip'], port=kwargs['db_port'])
         server_info = client.server_info()
         print(server_info)
-        collection = client['Pages']
-        collection = collection['Nodes']
-        kwargs['nodes'] = get_data_with(collection, label='Transformed')
+        database = client['Pages']
+        collection = database['Nodes']
+        kwargs['nodes'] = get_data_with(collection, label='Transformed', root=kwargs['root'])
             
         handler = GachiGaHandler(**handler_kwargs)
         for node in kwargs['nodes']:
             processed_node = handler.run(node=node)
             sync_database([processed_node], collection, use_cache=False)
-        handler.db_client.close()
-        return {'statusCode': 200, 'message': "Succeeded", "del_nat_gateway": kwargs['del_nat_gateway']}
+        kwargs.update({'statusCode': 200, 'message': "Succeeded"})
     
     except Exception as e:
-        return {'statusCode': -1, 'message': "Unexpected exit", "del_nat_gateway": kwargs['del_nat_gateway']}
+        kwargs.update({'statusCode': -1, 'message': "Unexpected Error"})
+               
+    if database:
+        if kwargs['statusCode'] < 300:
+            job_state = 'inactive'
+        else:
+            job_state = 'pending'
+
+        filter_condition = {"url": kwargs['root']}
+        update_operation = {"$set": {"status": job_state}}
+        
+        result = database['JobTable'].update_many(filter_condition, update_operation)
+        print(result)
+        
+    return kwargs
 
 def make_dummy_nodes(db_ip, db_port=None):
     from pymongo import MongoClient

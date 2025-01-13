@@ -7,8 +7,7 @@
         "result_length": 5000
     },
     "LifeCycle":{
-        "timeout": 300,
-        "ip_check": true
+        "maximum_execution_frequency": 2
     },
     "Queue":{
         "args":{

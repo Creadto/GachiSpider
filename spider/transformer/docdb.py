@@ -16,20 +16,19 @@ class DocDBTransformer(Transformer):
             self.logger.info("Server Information: {0}".format(server_info))
             self.collection = client['Pages']
             self.collection = self.collection['Nodes']
-            self.alternatives = get_data_with(self.collection, label='store')
+            self.alternatives = get_data_with(self.collection, label='store', root=kwargs['root'])
         except Exception as e:
             self.logger.error("Failed DB connection")
             self.collection = None
             self.alternatives = None    
 
     def run(self):
-        result = {"nodes": []}
         for node in self.alternatives:
             self.state = Collect(node=node, parent=self)
             self.state.run()
             
             sync_database([self.state.node], self.collection, use_cache=True)
-        return result
+        return dict()
     
     def transit(self, next_state: State, auto_run: bool = True):          
         self.state = next_state

@@ -29,7 +29,9 @@ def sync_database(nodes: List[Node], collection, use_cache=True):
     
     return existing_nodes + new_nodes
 
-def get_data_with(collection, label="store"):
+def get_data_with(collection, label="store", root=None):
     existing_nodes = collection.find({"label": label}, Node.get_fields(begin=1))
     existing_nodes = [Node.from_dict(node) for node in existing_nodes]
+    if root:
+        existing_nodes = [node for node in existing_nodes if node.fan_in == root]
     return existing_nodes

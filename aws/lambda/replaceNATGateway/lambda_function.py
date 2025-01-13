@@ -4,10 +4,8 @@ import boto3
 
 # 새로운 NAT Gateway를 생성하고 라우팅 테이블을 업데이트하는 함수
 def lambda_handler(event, context):
-    kw_map = {'statusCode': 'statusCode', 'message': 'message',
-            'url': 'url', 'db_ip': 'db_ip', 'db_port': 'db_port',
-            'del_nat_gateway': 'del_nat_gateway',
-            'replace_nat_gateway': 'replace_nat_gateway'}
+    kw_map = {'del_nat_gateway': 'del_nat_gateway',
+              'replace_nat_gateway': 'replace_nat_gateway'}
     
     
     kwargs = dict()
