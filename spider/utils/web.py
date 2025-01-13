@@ -26,6 +26,8 @@ def get_default_header(**kwargs):
 def get_base_url(url):
     parsed = urlparse(url)
     base_url = f'{parsed.scheme}://{parsed.netloc}'
+    if parsed.path:
+        base_url += f'/{parsed.path}'
     return base_url
 
 def get_unwrapped_url(url, agent_name="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36"):
