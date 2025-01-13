@@ -45,6 +45,6 @@ class Fetch(State):
         for link in links:
             href = link.get('href')
             if href:
-                node = Node(url=href, fan_in=[self.node.url])
+                node = Node(url=href, fan_in=self.node.url)
                 nodes.append(node)
         return nodes

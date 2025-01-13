@@ -11,7 +11,7 @@ class Node:
     label: str = None
     data: object = None
     pattern: str = None
-    fan_in: List[object] = None
+    fan_in: str = None
     fan_out: List[object] = None
     
     def to_dict(self):
