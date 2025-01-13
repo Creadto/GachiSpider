@@ -4,7 +4,7 @@ from spider.utils.logging import init_logging
 
 def lambda_handler(event, context):
     kw_map = {'statusCode': 'status', 'message': 'message',
-              'url': 'url', 'db_ip': 'db_ip', 'db_port': 'db_port'}
+              'url': 'root', 'db_ip': 'db_ip', 'db_port': 'db_port'}
     
     kwargs = dict()
     for event_key, key in kw_map.items():
@@ -16,6 +16,6 @@ def lambda_handler(event, context):
     if link_manager.collection == None:
         kwargs.update({'statusCode': 301, 'message': "Failed DB Connection"})
     else:
-        kwargs.update(link_manager.crawl(url=kwargs['url']))
+        kwargs.update(link_manager.crawl(url=kwargs['root']))
     
     return kwargs

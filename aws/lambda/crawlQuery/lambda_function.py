@@ -41,7 +41,7 @@ def lambda_handler(event, context):
     except Exception as e:
         kwargs.update({'statusCode': -1, 'message': "Unexpected Error"})
                
-    if database:
+    if database != None:
         if kwargs['statusCode'] < 300:
             job_state = 'inactive'
         else:

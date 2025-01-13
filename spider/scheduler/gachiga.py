@@ -71,7 +71,6 @@ class GachigaScheduler(Scheduler):
         result_logs = ""
         for job in jobs:
             freshness, gap_hours = self._get_freshness(job['last_updated'], self._config['Roots'][job['url']]['period'])
-            gap_hours_cnt += 1 if gap_hours < 3 else 0
             if freshness == 1.:
                 self.add_request(**job)
             
@@ -123,7 +122,6 @@ class GachigaScheduler(Scheduler):
     def add_request(self, url, **kwargs):
         job = {'url': url, 'status': 'active', 'retry': 0, 'max_retry': 3, 'last_updated': time.time()}
         job.update(kwargs)
-        self._update_items(job, self.__database['JobTable'])
         if job['status'] == 'active':
             if self._is_available_execution(self.__database['JobTable']):
                 func_kwargs = {'url': url, 'db_ip': self._config['DocDB']['args']['host']}
@@ -133,7 +131,10 @@ class GachigaScheduler(Scheduler):
             else:
                 self._base_logger.info("The message processing for the request failed due to concurrency limits.")
                 self._queue.append(job)
+                job['status'], job['last_updated'] = 'inactive', time.time()
                 self._base_logger.info(f"Queue in Scheduler - length: {len(self._queue)}")
+        
+        self._update_items(job, self.__database['JobTable'])
 
     def get_request(self):
         pass
