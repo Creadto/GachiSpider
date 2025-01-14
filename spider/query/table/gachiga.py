@@ -9,7 +9,7 @@ class Post(Entity):
     thumbnail_photo_url: str = None
     category: str = ""
     country_code_bitmask: int = 0
-    country_code: str = ""
+    country_code: str = "KR"
     view_count: int = 0
     entity_status: str = ""
     state_code: str = ""

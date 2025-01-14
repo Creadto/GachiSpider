@@ -66,8 +66,9 @@ class Format(State):
                 cleaned_text = clean_text(element)
                 if cleaned_text != "":
                     index = self._find_index(cleaned_text, contents)
-                    self.body += self._make_element(contents[index], "texts")
-                    del contents[index]
+                    if index != None: 
+                        self.body += self._make_element(contents[index], "texts")
+                        del contents[index]
                     
         t_mark = '\t' * self.form['depth']
         for post in self.form['tail']:

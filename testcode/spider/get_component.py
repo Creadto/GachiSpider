@@ -14,4 +14,4 @@ def main(url):
     pass
 
 if __name__ == "__main__":
-    main("https://www.bobaedream.co.kr/view?code=strange&No=6441402")
+    main("{your target url}")

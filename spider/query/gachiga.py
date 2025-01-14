@@ -24,7 +24,6 @@ class GachiGaHandler(Handler):
             root_meta = self.root_nodes[root_url]
             stub = {
                 'country_code_bitmask': get_region_code(root_meta["region"]),
-                'country_code': "KR",
                 'category': root_meta['kind'].upper(),
                 'dtype': root_meta['kind'].lower()
             }
