@@ -40,7 +40,6 @@ class GachigaScheduler(Scheduler):
         for key, value in roots.items():
             root = {'url': key}
             root.update(value)
-            self._update_items(root, collection)
             self.add_request(key, status='inactive', last_updated=time.time() - (30 * 24 * 60 * 60))
     # endregion
     
@@ -69,13 +68,15 @@ class GachigaScheduler(Scheduler):
     def _update_job_freshness(self, collection):
         jobs = collection.find({"status": "inactive"}, {"url": 1, "last_updated": 1})
         result_logs = ""
+        max_exe_freq = self._config['LifeCycle']['maximum_execution_frequency']
         for job in jobs:
             freshness, gap_hours = self._get_freshness(job['last_updated'], self._config['Roots'][job['url']]['period'])
-            if freshness == 1.:
-                self.add_request(**job)
-            
             self._base_logger.info(f"Job freshness({freshness}): {job['url']}")
             result_logs += f"Freshness: {freshness} | url: {job['url']} \n"
+            
+            if freshness == 1. and max_exe_freq > 0:
+                max_exe_freq -= 1
+                self.add_request(**job)
             
         return result_logs
 

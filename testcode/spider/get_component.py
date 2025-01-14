@@ -10,7 +10,8 @@ def main(url):
     req = Request(url, headers={'User-Agent': "googling bot"})
     context = urlopen(req)
     soup = bs(context.read(), 'html.parser')
-    result = soup.select("h3.post_subject")
+    result = soup.select("#print_area div.writerProfile dt strong")
+    pass
 
 if __name__ == "__main__":
-    main("{your target url}")
+    main("https://www.bobaedream.co.kr/view?code=strange&No=6441402")

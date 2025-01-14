@@ -30,8 +30,10 @@ class Parse(State):
                 self.node.cache = None
                 self.node.freshness = -1
                 self.node.label = "Frozen"
-            
-            self.parent.transit(StoreLocal(node=self.node, parent=self.parent, root='/tmp/datalake/red_zone'))
+                self.parent.transit(Failed(node=self.node, parent=self.parent))
+            else:
+                self.parent.transit(StoreLocal(node=self.node, parent=self.parent, root='/tmp/datalake/red_zone'))
+                
         except Exception as e:
             import traceback
             self.node.label = "Not found correct form"
@@ -82,7 +84,9 @@ class Parse(State):
                     tag_opt = value['withTag']
                 
                 chunk = [{'text': clean_text(stub, tag_opt), 'attrs': stub.attrs} for stub in result]
-                gathered[tag] = [segment for segment in chunk if segment['text'] != ""]
+                if tag == "contents":
+                    chunk = [segment for segment in chunk if segment['text'] != ""]
+                gathered[tag] = chunk
 
         return gathered
     

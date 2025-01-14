@@ -36,7 +36,7 @@ class Bulletin(Entity):
 def get_region_code(region: str):
     region = region.upper()
     alternatives = [
-        "UNIVERSAL",
+        "UNI",
         "KR", "US", "JP", "CN", "VN", "SG",
         "TH", "PH", "MY", "ID", "GU", "AU",
         "UZ", "CA", "RU", "LA", "GB", "DE",
@@ -48,6 +48,6 @@ def get_region_code(region: str):
         region_map[key] = 1 << i
         total_value += region_map[key]
     
-    region_map["ALL"] = total_value
+    region_map["UNIVERSAL"] = total_value
     
     return None if region not in region_map else region_map[region]
