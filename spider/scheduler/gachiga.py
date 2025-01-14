@@ -34,7 +34,7 @@ class GachigaScheduler(Scheduler):
         self._engine.add_single_event(self.__update_root_nodes, "update root nodes", **func_kwargs)
         self._engine.add_fixed_event(self._check_pending_jobs, "check pending jobs", 3600, collection=self.__database['JobTable'])
         self._engine.add_fixed_event(self._update_job_freshness, "update job freshness", 3600, collection=self.__database['JobTable'])
-        self._engine.add_fixed_event(self._adjust_queue_jobs, "update scheduler's queue", 1200)
+        self._engine.add_fixed_event(self._adjust_queue_jobs, "update scheduler's queue", 120)
     
     def __update_root_nodes(self, roots, collection):
         for key, value in roots.items():
