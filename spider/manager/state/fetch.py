@@ -41,10 +41,14 @@ class Fetch(State):
     def _get_links(self) -> List[Node]:
         soup = bs(self.node.cache, 'html.parser')
         links = soup.find_all('a')
-        nodes = []
+        fan_out = set()
         for link in links:
             href = link.get('href')
             if href:
-                node = Node(url=href, fan_in=self.node.url)
-                nodes.append(node)
+                fan_out.add(href)
+        
+        nodes = []
+        for href in fan_out:
+            node = Node(url=href, fan_in=self.node.url)
+            nodes.append(node)
         return nodes

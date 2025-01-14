@@ -4,7 +4,6 @@ import os
 from pymongo import MongoClient
 
 from spider.query import GachiGaHandler
-from spider.structure import Node
 from spider.utils.logging import init_logging
 from spider.utils.mongo import get_data_with, sync_database
 
@@ -30,10 +29,10 @@ def lambda_handler(event, context):
         print(server_info)
         database = client['Pages']
         collection = database['Nodes']
-        kwargs['nodes'] = get_data_with(collection, label='Transformed', root=kwargs['root'])
+        nodes = get_data_with(collection, label='Transformed', root=kwargs['root'])
             
         handler = GachiGaHandler(**handler_kwargs)
-        for node in kwargs['nodes']:
+        for node in nodes:
             processed_node = handler.run(node=node)
             sync_database([processed_node], collection, use_cache=False)
         kwargs.update({'statusCode': 200, 'message': "Succeeded"})

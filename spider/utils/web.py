@@ -61,6 +61,10 @@ def download_media(url, save_path):
     except Exception as e:
         return None
     
-def clean_text(text):
+def clean_text(element, with_tag: bool=True, lt: str=''):
     # \u200b: zero-width space, \ufeff: BOM, \u2028-\u202f: line separators
-    return re.sub(r'[\u200b\ufeff\u2028-\u202f]', '', text).strip()
+    if with_tag:
+        text = element.get_text(strip=True)
+        return re.sub(r'[\u200b\ufeff\u2028-\u202f]', '', text).strip()
+    else:
+        return lt.join(t for t in element.contents if isinstance(t, str))

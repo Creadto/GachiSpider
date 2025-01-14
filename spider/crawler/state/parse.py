@@ -18,6 +18,19 @@ class Parse(State):
     def run(self):
         try:
             self.node.data = self._parse()
+            # If It's a text only post without media files, Move through RDB(Be the Frozen immediately)
+            n_media = 0
+            if "images" in self.node.data:
+                n_media += len(self.node.data['images'])
+            
+            if "videos" in self.node.data:
+                n_media += len(self.node.data['videos'])
+            
+            if n_media == 0:
+                self.node.cache = None
+                self.node.freshness = -1
+                self.node.label = "Frozen"
+            
             self.parent.transit(StoreLocal(node=self.node, parent=self.parent, root='/tmp/datalake/red_zone'))
         except Exception as e:
             import traceback
@@ -64,7 +77,12 @@ class Parse(State):
             if 'html' in value and value['html']:
                 gathered[tag] = [{'text': stub.prettify(), 'attrs': None} for stub in result]
             else:
-                gathered[tag] = [{'text': clean_text(stub.get_text(strip=True)), 'attrs': stub.attrs} for stub in result]
+                tag_opt = True
+                if 'withTag' in value:
+                    tag_opt = value['withTag']
+                
+                chunk = [{'text': clean_text(stub, tag_opt), 'attrs': stub.attrs} for stub in result]
+                gathered[tag] = [segment for segment in chunk if segment['text'] != ""]
 
         return gathered
     
