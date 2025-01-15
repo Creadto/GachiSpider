@@ -17,6 +17,7 @@ class Post(Entity):
     city_code: str = ""
     created_date_time: str = ""
     last_modified_date_time: str = ""
+    latest_platform: str = "BOT"
     dtype: str = ""
 
 @dataclass

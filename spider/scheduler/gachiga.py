@@ -33,8 +33,8 @@ class GachigaScheduler(Scheduler):
         func_kwargs = {'roots': self._config['Roots'], 'collection': self.__database['Roots']}
         self._engine.add_single_event(self.__update_root_nodes, "update root nodes", **func_kwargs)
         self._engine.add_fixed_event(self._check_pending_jobs, "check pending jobs", 3600, collection=self.__database['JobTable'])
-        self._engine.add_fixed_event(self._update_job_freshness, "update job freshness", 3600, collection=self.__database['JobTable'])
-        self._engine.add_fixed_event(self._adjust_queue_jobs, "update scheduler's queue", 120)
+        self._engine.add_fixed_event(self._update_job_freshness, "update job freshness", 61, collection=self.__database['JobTable'])
+        self._engine.add_fixed_event(self._adjust_queue_jobs, "update scheduler's queue", 30)
     
     def __update_root_nodes(self, roots, collection):
         for key, value in roots.items():
@@ -58,7 +58,8 @@ class GachigaScheduler(Scheduler):
             job['retry'] += 1
             if job['retry'] >= job['max_retry']:
                 job['status'] = 'failed'
-            
+            else:
+                job['status'] = 'active'
             url = job['url']
             self._base_logger.info(f"Pending job({job['retry']}/{job['max_retry']}): {url}")
             self.add_request(**job)
@@ -81,9 +82,13 @@ class GachigaScheduler(Scheduler):
         return result_logs
 
     def _is_available_execution(self, collection) -> bool:
-        active_count = collection.count_documents({"status": "active"})
+        if len(self._queue) > 0:
+            active_count = len(self._queue)
+        else:
+            active_count = collection.count_documents({"status": "active"})
+            
         max_exe_freq = self._config['LifeCycle']['maximum_execution_frequency']
-        return active_count <= max_exe_freq
+        return active_count < max_exe_freq
     
     # endregion
     # region: AWS services
@@ -126,13 +131,14 @@ class GachigaScheduler(Scheduler):
         if job['status'] == 'active':
             if self._is_available_execution(self.__database['JobTable']):
                 func_kwargs = {'url': url, 'db_ip': self._config['DocDB']['args']['host']}
+                job['last_updated'] = time.time()
                 length = self._engine.add_single_event(self._invoke_sqs, "invoke_sqs", **func_kwargs)
         
                 self._base_logger.info(f"Waited message length: {length}")
             else:
                 self._base_logger.info("The message processing for the request failed due to concurrency limits.")
                 self._queue.append(job)
-                job['status'], job['last_updated'] = 'inactive', time.time()
+                job['status'] = 'inactive'
                 self._base_logger.info(f"Queue in Scheduler - length: {len(self._queue)}")
         
         self._update_items(job, self.__database['JobTable'])
