@@ -71,7 +71,7 @@ class GachigaScheduler(Scheduler):
         max_exe_freq = self._config['LifeCycle']['maximum_execution_frequency']
         for job in jobs:
             freshness, gap_hours = self._get_freshness(job['last_updated'], self._config['Roots'][job['url']]['period'])
-            self._base_logger.info(f"Job freshness({freshness}): {job['url']}")
+            self._base_logger.info(f"Job freshness({freshness}): {job['url']}, remain hours: {gap_hours}")
             result_logs += f"Freshness: {freshness} | url: {job['url']} \n"
             
             if freshness == 1. and max_exe_freq > 0:
