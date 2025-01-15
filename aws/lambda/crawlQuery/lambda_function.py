@@ -34,15 +34,17 @@ def lambda_handler(event, context):
             
         handler = GachiGaHandler(**handler_kwargs)
         for node in nodes:
-            processed_node = handler.run(node=node)
-            sync_database([processed_node], collection, use_cache=False)
+            if node.cache != None:
+                processed_node = handler.run(node=node)
+                sync_database([processed_node], collection, use_cache=False)
         kwargs.update({'statusCode': 200, 'message': "Succeeded"})
     
     except Exception as e:
+        print(e)
         kwargs.update({'statusCode': -1, 'message': "Unexpected Error"})
                
     if database != None:
-        if kwargs['statusCode'] < 300:
+        if 0 < kwargs['statusCode'] < 300:
             job_state = 'inactive'
         else:
             job_state = 'pending'
