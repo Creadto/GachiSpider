@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 
 from pymongo import MongoClient
 
@@ -47,7 +48,7 @@ def lambda_handler(event, context):
             job_state = 'pending'
 
         filter_condition = {"url": kwargs['root']}
-        update_operation = {"$set": {"status": job_state}}
+        update_operation = {"$set": {"status": job_state, "last_updated": time.time()}} # last updated time <- assign
         
         result = database['JobTable'].update_many(filter_condition, update_operation)
         print(result)

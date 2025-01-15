@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import re
 from spider.structure import Entity
 
 @dataclass
@@ -33,10 +34,17 @@ class Bulletin(Entity):
     comment_count: int = 0
     content_grade: str = "NORMAL"
 
-def get_region_code(region: str):
-    region = region.upper()
+def get_region_code(region: str, value=0):
+    regions = region.upper()
+    regions = "".join(re.findall(r'[A-Z]', region))
+    # recursive case
+    if len(regions) > 2 and regions != "UNIVERSAL":
+        region, remain = regions[:2], regions[2:]
+        value += get_region_code(remain, value)
+        
+    # base case    
     alternatives = [
-        "UNI",
+        "UN",
         "KR", "US", "JP", "CN", "VN", "SG",
         "TH", "PH", "MY", "ID", "GU", "AU",
         "UZ", "CA", "RU", "LA", "GB", "DE",
@@ -50,4 +58,4 @@ def get_region_code(region: str):
     
     region_map["UNIVERSAL"] = total_value
     
-    return None if region not in region_map else region_map[region]
+    return value if region not in region_map else value + region_map[region]
