@@ -17,6 +17,7 @@ def lambda_handler(event, context):
         kwargs[key] = event.get(event_key)
 
     init_logging(logging.INFO, "query-to-rdb-using-lambda.log", dir_path='/tmp/')
+    
     handler_kwargs = {
         "host": os.getenv("host"),
         "user": os.getenv("user"),
@@ -24,7 +25,11 @@ def lambda_handler(event, context):
         "database": os.getenv("database"),
     }
     database = None
+
     try:
+        if not 0 < kwargs['status'] < 300:
+            raise RuntimeError
+        
         client = MongoClient(host=kwargs['db_ip'], port=kwargs['db_port'])
         server_info = client.server_info()
         print(server_info)
@@ -41,7 +46,10 @@ def lambda_handler(event, context):
     
     except Exception as e:
         print(e)
-        kwargs.update({'statusCode': -1, 'message': "Unexpected Error"})
+        if not 0 < kwargs['status'] < 300:
+            kwargs['statusCode'] = kwargs['status']
+        else:
+            kwargs.update({'statusCode': -1, 'message': "Unexpected Error"})
                
     if database != None:
         if 0 < kwargs['statusCode'] < 300:

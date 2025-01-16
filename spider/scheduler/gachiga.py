@@ -51,15 +51,17 @@ class GachigaScheduler(Scheduler):
             self._base_logger.info(f"Tried to send a job: {job['url']}")
     
     def _check_pending_jobs(self, collection):
+        result_logs = ""
+        if len(self._queue) > 0:
+            self._base_logger.info(f"[PASSED]Exists prioritized jobs: Scheduler's queue length: {len(self._queue)}")
+            return result_logs
         jobs = collection.find({"status": "pending"}, {"url": 1, "retry": 2, "max_retry": 3})
         
-        result_logs = ""
         for job in jobs:
             job['retry'] += 1
             if job['retry'] >= job['max_retry']:
                 job['status'] = 'failed'
-            else:
-                job['status'] = 'active'
+
             url = job['url']
             self._base_logger.info(f"Pending job({job['retry']}/{job['max_retry']}): {url}")
             self.add_request(**job)
@@ -67,8 +69,12 @@ class GachigaScheduler(Scheduler):
         return result_logs
     
     def _update_job_freshness(self, collection):
-        jobs = collection.find({"status": "inactive"}, {"url": 1, "last_updated": 1})
         result_logs = ""
+        if len(self._queue) > 0:
+            self._base_logger.info(f"[PASSED]Exists prioritized jobs: Scheduler's queue length: {len(self._queue)}")
+            return result_logs
+        
+        jobs = collection.find({"status": "inactive"}, {"url": 1, "last_updated": 1})
         max_exe_freq = self._config['LifeCycle']['maximum_execution_frequency']
         for job in jobs:
             freshness, gap_hours = self._get_freshness(job['last_updated'], self._config['Roots'][job['url']]['period'])
