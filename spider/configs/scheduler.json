@@ -3,7 +3,7 @@
         "platform": "MongoDB"
     },
     "Engine":{
-        "period": 0.3,
+        "period": 2.0,
         "result_length": 5000
     },
     "LifeCycle":{

@@ -36,15 +36,17 @@ class Bulletin(Entity):
     content_grade: str = "NORMAL"
 
 def get_region_code(region: str, value=0):
-    regions = "".join(re.findall(r'[A-Z]', region.upper()))
+    region = region.upper()
+    regions = "".join(re.findall(r'[A-Z]', region))
+    
     # recursive case
     if len(regions) > 2 and regions != "UNIVERSAL":
         region, remain = regions[:2], regions[2:]
         value += get_region_code(remain, value)
-
+    
     # base case    
     alternatives = [
-        "UN",
+        "XX",
         "KR", "US", "JP", "CN", "VN", "SG",
         "TH", "PH", "MY", "ID", "GU", "AU",
         "UZ", "CA", "RU", "LA", "GB", "DE",
