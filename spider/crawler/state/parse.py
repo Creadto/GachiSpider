@@ -23,9 +23,9 @@ class Parse(State):
             if "images" in self.node.data:
                 n_media += len(self.node.data['images'])
             
-            # not supported
-            # if "videos" in self.node.data:
-            #     n_media += len(self.node.data['videos'])
+            # not supported(temporary blocked)
+            if "videos" in self.node.data:
+                n_media = 0 if len(self.node.data['videos']) > 0 else n_media
             
             if n_media == 0:
                 self.node.cache = None
