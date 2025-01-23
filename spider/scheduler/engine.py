@@ -21,7 +21,14 @@ class Engine:
         self._fixed_events = dict()
 
         self.timer = threading.Timer(self.base_period, self.fixed_update)
-        
+    
+    def __contains__(self, key):
+        cond1 = key in self._main_events
+        cond2 = key in self._fixed_events
+        alters = [True for _, name, _, _ in self._single_events if key == name]
+        cond3 = len(alters) > 0
+        return cond1 | cond2 | cond3
+    
     def update(self):
         result = dict()
         if self.active == False:
@@ -33,8 +40,13 @@ class Engine:
         
         while len(self._single_events) > 0:
             tup = self._single_events.pop(0)
-            event, name, kwargs = tup
-            result["[SINGLE]"+ name] = event(**kwargs)
+            event, name, delay, kwargs = tup
+            trigger_time = delay - time.time()
+            if trigger_time > 0:
+                self._single_events.append(tup)
+                continue
+            else:
+                result["[SINGLE]"+ name] = event(**kwargs)
             
         return result
     
@@ -81,9 +93,9 @@ class Engine:
         self._main_events[name] = (event, kwargs)
         return len(self._main_events)
     
-    def add_single_event(self, event, name, **kwargs):
+    def add_single_event(self, event, name, delay=0, **kwargs):
         # In cases of single event, it can use duplicated name
-        self._single_events.append((event, name, kwargs))
+        self._single_events.append((event, name, time.time() + delay, kwargs))
         return len(self._single_events)
         
     def add_fixed_event(self, event, name, period, **kwargs):

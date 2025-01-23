@@ -60,6 +60,8 @@ def main():
     scheduler_config['DocDB']['args']['host'] = db_config['uri']
     scheduler_config['Queue']['args'] = credential_config['sqs']['key']
     scheduler_config['Queue']['endpoint'] = credential_config['sqs']['url']
+    scheduler_config['Nat']['args'] = credential_config['stepfunctions']['key']
+    scheduler_config['Nat']['endpoint'] = credential_config['stepfunctions']['arn']
     scheduler_config['Roots'] = root_nodes
     
     init_logging(logging.INFO, "scheduler.log")

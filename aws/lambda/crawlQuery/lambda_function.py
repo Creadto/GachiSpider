@@ -27,14 +27,15 @@ def lambda_handler(event, context):
     database = None
 
     try:
-        if not 0 < kwargs['status'] < 300:
-            raise RuntimeError
-        
         client = MongoClient(host=kwargs['db_ip'], port=kwargs['db_port'])
         server_info = client.server_info()
         print(server_info)
         database = client['Pages']
         collection = database['Nodes']
+        
+        if not 0 < kwargs['status'] < 300:
+            raise RuntimeError
+        
         nodes = get_data_with(collection, label='Transformed', root=kwargs['root'])
             
         handler = GachiGaHandler(**handler_kwargs)

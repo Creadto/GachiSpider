@@ -19,6 +19,8 @@ class GachigaScheduler(Scheduler):
         
         self.__database = self._doc_db['Pages']
         self._sqs_client = boto3.client(**config['Queue']['args'])
+        self._nat_client = boto3.client(**config['Nat']['args'])
+        self._available_nat_gateway = True
         self._queue = []
         self._config = config
         self.__warm_up_engine()
@@ -33,14 +35,23 @@ class GachigaScheduler(Scheduler):
         func_kwargs = {'roots': self._config['Roots'], 'collection': self.__database['Roots']}
         self._engine.add_single_event(self.__update_root_nodes, "update root nodes", **func_kwargs)
         self._engine.add_fixed_event(self._check_pending_jobs, "check pending jobs", 3600, collection=self.__database['JobTable'])
-        self._engine.add_fixed_event(self._update_job_freshness, "update job freshness", 61, collection=self.__database['JobTable'])
+        self._engine.add_fixed_event(self._update_job_freshness, "update job freshness", 601, collection=self.__database['JobTable'])
         self._engine.add_fixed_event(self._adjust_queue_jobs, "update scheduler's queue", 30)
+        # Must be a last event
+        self._engine.add_fixed_event(self._maintain_nat_gateway, "check NAT gateway", 3600, collection=self.__database['JobTable'])
     
     def __update_root_nodes(self, roots, collection):
         for key, value in roots.items():
             root = {'url': key}
             root.update(value)
             self.add_request(key, status='inactive', last_updated=time.time() - (30 * 24 * 60 * 60))
+    
+    def __update_field(self, field_name, value):
+        if hasattr(self, field_name):
+            setattr(self, field_name, value)
+            self._base_logger.info(f"{field_name} has been updated to {value}.")
+        else:
+            self._base_logger.info(f"Field '{field_name}' does not exist in the class.")
     # endregion
     
     # region: Cron jobs: check pending jobs, update job freshness(not recorded)
@@ -74,7 +85,7 @@ class GachigaScheduler(Scheduler):
             self._base_logger.info(f"[PASSED]Exists prioritized jobs: Scheduler's queue length: {len(self._queue)}")
             return result_logs
         
-        jobs = collection.find({"status": "inactive"}, {"url": 1, "last_updated": 1})
+        jobs = collection.find({"status": "inactive"}, {"url": 1, "last_updated": 1, "retry": 1})
         max_exe_freq = self._config['LifeCycle']['maximum_execution_frequency']
         for job in jobs:
             freshness, gap_hours = self._get_freshness(job['last_updated'], self._config['Roots'][job['url']]['period'])
@@ -87,6 +98,41 @@ class GachigaScheduler(Scheduler):
             
         return result_logs
 
+    def _maintain_nat_gateway(self, collection):
+        result_logs = ""
+        if not self._is_available_execution(collection):
+            return result_logs
+        
+        jobs = list(collection.find({}, {'url': 1, 'status': 1, 'last_updated': 1}))
+        failed_jobs = []
+        min_remain_hours = 240
+        
+        for job in jobs:
+            if job['status'] in ["active", "pending"]:
+                self._base_logger.info("Not a condition manage NAT gateway reason of active job(s).")
+                return
+            
+            elif job['status'] == "failed":
+                failed_jobs.append(job)
+            
+            _, gap_hours = self._get_freshness(job['last_updated'], self._config['Roots'][job['url']]['period'])
+            if min_remain_hours > gap_hours:
+                min_remain_hours = gap_hours
+        
+        if min_remain_hours > 2.:
+            self._base_logger.info(f"Remain hours: {min_remain_hours}, Tried to delete NAT gateway.") 
+            self._control_nat(del_nat=True)
+            for job in failed_jobs:
+                job = {'url': job['url'], 'status': 'inactive', 'retry': 0, 'max_retry': 3, 'last_updated': time.time()}
+                self._update_items(job, collection)
+        
+        else:
+            if not self._available_nat_gateway:
+                self._base_logger.info("Tried to replace NAT gateway.")
+                self._control_nat(replace_nat=True)
+        
+        return result_logs
+    
     def _is_available_execution(self, collection) -> bool:
         if len(self._queue) > 0:
             active_count = len(self._queue)
@@ -114,14 +160,40 @@ class GachigaScheduler(Scheduler):
         self._base_logger.info(f"Message ID: {response['MessageId']}")
         return response
     
+    def _invoke_nat(self, **payload):
+        arn = self._config['Nat']['endpoint']
+        try:
+            response = self._nat_client.start_execution(
+                stateMachineArn=arn,
+                input=json.dumps(payload)
+            )
+            self._base_logger.info(f"Execution Stepfunctions: {response['executionArn']}")
+            return response['executionArn']
+        
+        except Exception as e:
+            self._base_logger.error(e)
+            return None
+    
     def _control_nat(self, del_nat=False, replace_nat=False):
-        func_kwargs = {'group': 'nat', 'del_nat_gateway': del_nat, 'replace_nat_gateway': replace_nat}
-        length = self._engine.add_single_event(self._invoke_sqs, "invoke_sqs", **func_kwargs)
+        if self._available_nat_gateway == False and del_nat == True:
+            self._base_logger.info("[PASSED] Already deleted NAT gateway")
+            return
+
+        func_kwargs = {'del_nat_gateway': del_nat, 'replace_nat_gateway': replace_nat}
+        _ = self._engine.add_single_event(self._invoke_nat, "invoke_sqs", **func_kwargs)
+        
+        _ = self._engine.add_single_event(self.__update_field, "reset_nat_gateway_status",
+                                          **{'field_name': '_available_nat_gateway', 'value': False})
+        if replace_nat:
+            # It takes about 3 mins
+            length = self._engine.add_single_event(self.__update_field, "update_nat_gateway_status",
+                                                delay=60 * 5, **{'field_name': '_available_nat_gateway', 'value': True})
     
     # endregion
+    # region: Utilities and Overrided functions
     def _get_freshness(self, last_visited, period):
         gap_hours, _ = divmod(time.time() - last_visited, 3600)
-        return clamp(gap_hours / period, 0., 1.), gap_hours
+        return clamp(gap_hours / period, 0., 1.), period - gap_hours
         
     def _update_items(self, job, collection):
         query = {'url': job['url']}      
@@ -132,6 +204,10 @@ class GachigaScheduler(Scheduler):
         return doc_id
     
     def add_request(self, url, **kwargs):
+        if self._available_nat_gateway == False:
+            self._base_logger.error("No NAT Gateway!! Can't do any process. Revive network configurations.")
+            return
+        
         job = {'url': url, 'status': 'active', 'retry': 0, 'max_retry': 3, 'last_updated': time.time()}
         job.update(kwargs)
         if job['status'] == 'active':
@@ -160,3 +236,4 @@ class GachigaScheduler(Scheduler):
 
     def empty(self):
         pass
+    # endregion
