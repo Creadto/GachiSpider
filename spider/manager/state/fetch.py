@@ -49,6 +49,6 @@ class Fetch(State):
         
         nodes = []
         for href in fan_out:
-            node = Node(url=href, fan_in=self.node.url)
+            node = Node(url=href, fan_in=self.node.url, last_visited=datetime.timestamp(datetime.now()))
             nodes.append(node)
         return nodes

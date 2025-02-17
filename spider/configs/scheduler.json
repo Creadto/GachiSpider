@@ -12,6 +12,7 @@
     "Queue":{
         "args":{
         },
+        "timeout": 1800,
         "endpoint": null
     },
     "Nat":{

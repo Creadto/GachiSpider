@@ -16,6 +16,7 @@ def get_default_header(**kwargs):
                      'Sec-Fetch-Site': 'none',
                      'Sec-Fetch-User': '?1',
                      'Upgrade-Insecure-Requests': '1',
+                     "Connection": "keep-alive",
                      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36'}
     
     for key, value in kwargs.items():
