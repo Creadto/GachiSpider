@@ -81,7 +81,7 @@ class GachigaScheduler(Scheduler):
     
     def _set_status(self, collection, url, to_status):
         result_logs = ""
-        jobs = collection.find({"url": url}, {"status": 1})
+        jobs = collection.find({"url": url}, {"status": 1, "url": 1})
         
         for job in jobs:
             job['status'] = to_status
