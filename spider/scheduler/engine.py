@@ -107,6 +107,13 @@ class Engine:
     def del_event(self, name):
         if name in self._main_events:
             del self._main_events[name]
+            
         if name in self._fixed_events:
             del self._fixed_events[name]
             
+        while len(self._single_events) > 0:
+            tup = self._single_events.pop(0)
+            _, event_name, _, _ = tup
+            
+            if name != event_name:
+                self._single_events.append(tup)

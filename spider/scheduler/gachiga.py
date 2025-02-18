@@ -79,11 +79,15 @@ class GachigaScheduler(Scheduler):
             result_logs += f"{job['retry']}/{job['max_retry']} | url: {job['url']} \n"
         return result_logs
     
-    def _set_status(self, collection, url, to_status):
+    def _set_status(self, collection, url, from_status, to_status):
         result_logs = ""
         jobs = collection.find({"url": url}, {"status": 1, "url": 1})
         
         for job in jobs:
+            if from_status != job['status']:
+                self._base_logger.info(f"Status can't be changed to {to_status} from {from_status}. current status: {job['status']}-{url}")
+                continue
+            
             job['status'] = to_status
             self._update_items(job, collection)
             line = f"Changed job status to {to_status}, url: {url}"
@@ -225,7 +229,7 @@ class GachigaScheduler(Scheduler):
         if job['status'] == 'active':
             if self._is_available_execution(self.__database['JobTable']):
                 invoke_kwargs = {'url': url, 'db_ip': self._config['DocDB']['args']['host']}
-                status_kwargs = {'url': url, 'to_status': 'pending', 'collection': self.__database['JobTable']}
+                status_kwargs = {'url': url, 'from_status': 'active', 'to_status': 'pending', 'collection': self.__database['JobTable']}
                 job['last_updated'] = time.time()
                 length = self._engine.add_single_event(self._invoke_sqs, "invoke_sqs", **invoke_kwargs)
                 length = self._engine.add_single_event(self._set_status, "time_out_timer", delay=self._config['Queue']['timeout'], **status_kwargs)
