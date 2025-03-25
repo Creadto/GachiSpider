@@ -31,6 +31,7 @@ class News(Entity):
 @dataclass
 class Bulletin(Entity):
     post_id: int = 0
+    sub_category: str = "HUMOR"
     like_count: int = 0
     comment_count: int = 0
     content_grade: str = "NORMAL"
