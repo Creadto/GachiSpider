@@ -32,7 +32,7 @@ class GachiGaHandler(Handler):
                 stub['sub_category'] = root_meta['subtitle']
             else:
                 info['bulletin'] = Bulletin()
-                stub['sub_category'] = info['bulletin']['sub_category']
+                stub['sub_category'] = info['bulletin'].sub_category
 
             meta_data.update(stub)
             
