@@ -18,6 +18,7 @@ def lambda_handler(event, context):
 
     init_logging(logging.INFO, "query-to-rdb-using-lambda.log", dir_path='/tmp/')
     
+    # 환경변수 변경 시 CodePipeline 확인 필요
     handler_kwargs = {
         "host": os.getenv("host"),
         "user": os.getenv("user"),
